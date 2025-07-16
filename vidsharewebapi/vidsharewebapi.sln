@@ -1,0 +1,24 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vidsharewebapi", "vidsharewebapi.csproj", "{3F065FCC-5846-CEA8-A7CC-F97E30C40B7B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3F065FCC-5846-CEA8-A7CC-F97E30C40B7B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F065FCC-5846-CEA8-A7CC-F97E30C40B7B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F065FCC-5846-CEA8-A7CC-F97E30C40B7B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F065FCC-5846-CEA8-A7CC-F97E30C40B7B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2FB26A99-0F93-4FE5-9D62-CD1D3E221361}
+	EndGlobalSection
+EndGlobal

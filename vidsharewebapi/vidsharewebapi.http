@@ -1,0 +1,6 @@
+@vidsharewebapi_HostAddress = http://localhost:5086
+
+GET {{vidsharewebapi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
