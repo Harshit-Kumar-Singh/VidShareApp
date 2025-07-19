@@ -1,7 +1,9 @@
+using System.Net.Http.Headers;
 using Amazon.DynamoDBv2;
 using Microsoft.AspNetCore.Mvc;
 using VidShareWebApi.Models;
 using VidShareWebApi.Repositories;
+using VidShareWebApi.Services.KafkaService;
 using VidShareWebApi.Utils.S3;
 
 namespace VidShareWebApi.Controllers
@@ -11,29 +13,26 @@ namespace VidShareWebApi.Controllers
     public class VideoUploadController : ControllerBase
     {
         private readonly IVideoRepository _repository;
+        private readonly IKafkaService _kafkaService;
         private readonly IS3Service _s3Service;
-        public VideoUploadController(IVideoRepository repository, IS3Service s3Service)
+        public VideoUploadController(IVideoRepository repository, IS3Service s3Service, IKafkaService kafkaService)
         {
             this._repository = repository;
             this._s3Service = s3Service;
+            this._kafkaService = kafkaService;
         }
-        // [HttpGet]
-        // [Route("videoUpload")]
-        // public ActionResult<string> VideoUpload()
-        // {
-        //     return Ok("Video Uploaded");
-        // }
 
         [HttpPut]
-        [Route("videoUpload")]
-        public async Task<IActionResult> VideoUpload([FromBody] UploadItem item)
+        [Route("save-video-info")]
+        public async Task<IActionResult> GetUploadAndDownloadUrl([FromBody] UploadItem item)
         {
+            // Saving video info and getting upload and download url at the same time.
             try
             {
                 item.Id = Guid.NewGuid().ToString();
                 item.UploadTime = DateTimeOffset.UnixEpoch.ToUnixTimeMilliseconds();
                 // Generate object key like: videos/{id}.mp4
-        
+
 
                 // Save metadata to DynamoDB
                 await _repository.SaveAsync(item);
@@ -51,6 +50,11 @@ namespace VidShareWebApi.Controllers
                     expiry: TimeSpan.FromMinutes(60)
                 );
 
+                // save presignedUrl and downloadUrl in db 
+                item.downloadRawVideoUrl = _downloadUrl;
+                item.preSignedUrl = preSignedUrl;
+                await _repository.UpdateAsync(item);
+
                 return Ok(new
                 {
                     message = "Metadata saved",
@@ -58,7 +62,7 @@ namespace VidShareWebApi.Controllers
                     uploadUrl = preSignedUrl,
                     downloadUrl = _downloadUrl
                 });
-               
+
             }
             catch (AmazonDynamoDBException ex)
             {
@@ -72,5 +76,31 @@ namespace VidShareWebApi.Controllers
             }
 
         }
+        [HttpPost]
+        [Route("upload-video/{id}")]
+        public async Task<IActionResult> UploadVideo([FromRoute] string id,[FromForm] IFormFile mediaFile)
+        {
+            var info = await _repository.GetByIdAsync(id);
+            var httpClient = new HttpClient();
+            var streamContent = new StreamContent(mediaFile.OpenReadStream());
+            streamContent.Headers.ContentType = new MediaTypeHeaderValue(mediaFile.ContentType);
+            var response = await httpClient.PutAsync(info.preSignedUrl, streamContent);
+
+            // connect to kafka and send the meta info in it for transcoder service
+            await _kafkaService.SendMessageAsync("test-topic", info.Id);
+
+            if (response.IsSuccessStatusCode)
+            {
+                return Ok(new
+                {
+                    Message = "Video Uploaded Successfully",
+                    DownloadUrl = info.downloadRawVideoUrl
+                });
+            }
+            return StatusCode((int)response.StatusCode, "Failed to upload on S3");
+        }
+
+
+
     }
 }

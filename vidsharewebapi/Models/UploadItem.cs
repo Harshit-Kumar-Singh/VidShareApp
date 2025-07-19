@@ -19,5 +19,12 @@ namespace VidShareWebApi.Models
 
         [DynamoDBProperty("userId")]
         public string UserId { get; set; }
+
+        [DynamoDBProperty("preSignedUrl")]
+        public string? preSignedUrl { get; set; }
+
+        [DynamoDBProperty("downloadRawVideoUrl")]
+        public string? downloadRawVideoUrl { get; set; }
+
     }
 }

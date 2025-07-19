@@ -3,6 +3,7 @@ using Amazon.DynamoDBv2.DataModel;
 using Amazon.S3;
 using Microsoft.AspNetCore.Http.HttpResults;
 using VidShareWebApi.Repositories;
+using VidShareWebApi.Services.KafkaService;
 using VidShareWebApi.Utils.S3;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
     new AmazonS3Client(Amazon.RegionEndpoint.USEast1)); // adjust region if needed
 
 builder.Services.AddScoped<IS3Service, S3Service>();
+builder.Services.AddSingleton<IKafkaService, KafkaProducerService>();
 
 
 // Add your repository
