@@ -1,3 +1,5 @@
 vidsharewebapi/obj/
 vidsharewebapi/bin/
 TranscoderService/obj/
+TranscoderService/bin
+vidsharewebapi/Migrations/

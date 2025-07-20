@@ -2,13 +2,21 @@ using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DataModel;
 using Amazon.S3;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using VidShareWebApi.Data;
 using VidShareWebApi.Repositories;
 using VidShareWebApi.Services.KafkaService;
 using VidShareWebApi.Utils.S3;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var connectionstring = "Server=localhost;Port=3306;Database=vidshare;User=root;Password=root;";
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(
+        connectionstring,
+        new MySqlServerVersion(new Version(8, 0, 6)
+    )));
 // Add DynamoDB
 builder.Services.AddSingleton<IAmazonDynamoDB>(sp =>
     new AmazonDynamoDBClient(Amazon.RegionEndpoint.USEast1)); // use your region
@@ -32,6 +40,20 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
 var app = builder.Build();
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    if (dbContext.Database.CanConnect())
+    {
+        System.Console.WriteLine("MySql Database is Connected...");
+    }
+    else
+    {
+        Console.WriteLine("Database Not Connected");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

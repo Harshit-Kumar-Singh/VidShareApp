@@ -18,7 +18,7 @@ namespace VidShareWebApi.Services.KafkaService
 
             try
             {
-                var deliveryResult = await producer.ProduceAsync("test-topic", new Message<Null, string> { Value = message });
+                var deliveryResult = await producer.ProduceAsync(topic, new Message<Null, string> { Value = message });
                 Console.WriteLine($"Message sent to {deliveryResult.TopicPartitionOffset}");
 
             }
