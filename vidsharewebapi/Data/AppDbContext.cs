@@ -17,5 +17,17 @@ namespace VidShareWebApi.Data
         public DbSet<VideoDownloadUrls> VideoDownloadUrls { get; set; }
 
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<User>().HasData(new User
+            {
+                UserId = 1,
+                Email = "abc@gmail.com",
+                Password = "xvasdfasf",
+                CreatedAt = DateTime.UtcNow,
+            });
+        }
+
+
     }
 }

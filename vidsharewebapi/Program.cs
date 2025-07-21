@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using VidShareWebApi.Data;
 using VidShareWebApi.Repositories;
+using VidShareWebApi.Repositories.VideoInfoRepo;
 using VidShareWebApi.Services.KafkaService;
+using VidShareWebApi.Services.VideoUploadService;
+using VidShareWebApi.UnitOfWork;
 using VidShareWebApi.Utils.S3;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,14 +20,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         connectionstring,
         new MySqlServerVersion(new Version(8, 0, 6)
     )));
-// Add DynamoDB
-builder.Services.AddSingleton<IAmazonDynamoDB>(sp =>
-    new AmazonDynamoDBClient(Amazon.RegionEndpoint.USEast1)); // use your region
 
-builder.Services.AddSingleton<IDynamoDBContext, DynamoDBContext>();
 
 builder.Services.AddSingleton<IAmazonS3>(sp =>
     new AmazonS3Client(Amazon.RegionEndpoint.USEast1)); // adjust region if needed
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IVideoInfoRepo, VideoInfoRepo>();
+builder.Services.AddScoped<IVideoUploadService, VideoUploadService>();
 
 builder.Services.AddScoped<IS3Service, S3Service>();
 builder.Services.AddSingleton<IKafkaService, KafkaProducerService>();
