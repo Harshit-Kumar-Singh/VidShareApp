@@ -7,5 +7,6 @@ namespace VidShareWebApi.Services.VideoUploadService
     public interface IVideoUploadService
     {
         Task<ServiceResult<string>> SaveVideoInfo(VideoInfo info);
+        Task<ServiceResult<bool>> VideoUpload(string id, IFormFile mediaFile);
     }
 }

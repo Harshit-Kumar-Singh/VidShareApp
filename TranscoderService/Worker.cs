@@ -7,6 +7,7 @@ using Amazon.S3.Transfer;
 using System;
 using TranscoderService.Models;
 using Amazon.S3.Model;
+using TranscoderService.AppDbContextX;
 namespace TranscoderService;
 
 
@@ -19,12 +20,14 @@ public class Worker : BackgroundService
 
     private readonly string _tempFolder = Path.Combine(Path.GetTempPath(), "transcoder");
 
-    public Worker(ILogger<Worker> logger)
+    private readonly IServiceScopeFactory _scopeFactory;
+    public Worker(ILogger<Worker> logger,IServiceScopeFactory scopeFactory)
     {
+        _scopeFactory = scopeFactory;
         _logger = logger;
         _s3Client = new AmazonS3Client(Amazon.RegionEndpoint.USEast1);
         Directory.CreateDirectory(_tempFolder);
-        
+
 
 
         var config = new ConsumerConfig
@@ -61,7 +64,7 @@ public class Worker : BackgroundService
     {
         try
         {
-             
+
 
             // Run FFmpeg to convert to given resolution
             string width = "854";
@@ -96,6 +99,9 @@ public class Worker : BackgroundService
 
             // string downloadUrl = $"https://{_bucketName}.s3.amazonaws.com/{outputKey}";
             // outputUrls.Add(downloadUrl);
+            
+
+
         }
         catch (Exception ex)
         {
@@ -139,13 +145,17 @@ public class Worker : BackgroundService
 
             System.Console.WriteLine("Uploaded...");
 
-            System.Console.WriteLine(downloadUrl);;
+            System.Console.WriteLine(downloadUrl); ;
 
-            //string url720p = $"https://{_bucketName}.s3.amazonaws.com/{outputKey720p}";
-            string url480p = $"https://{BucketName}.s3.amazonaws.com/{outputKey480p}";
-            string originalUrl = $"https://{BucketName}.s3.amazonaws.com/{s3Key}";
 
-            System.Console.WriteLine(url480p, originalUrl);
+            using var scope = _scopeFactory.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            var downloadUrlsToUpdate = dbContext.VideoDownloadUrls.Where(_x => _x.KeyId == s3Key).First();
+            downloadUrlsToUpdate.DownloadUrl480 = downloadUrl;
+            await dbContext.SaveChangesAsync();
+            Console.WriteLine("Updated in Db");
+
 
         }
         catch (System.Exception)

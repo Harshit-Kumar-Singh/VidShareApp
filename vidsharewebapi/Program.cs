@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using VidShareWebApi.Data;
 using VidShareWebApi.Repositories;
+using VidShareWebApi.Repositories.VideoDownloadUrlsRepo;
 using VidShareWebApi.Repositories.VideoInfoRepo;
 using VidShareWebApi.Services.KafkaService;
+using VidShareWebApi.Services.VideoDownloadService;
 using VidShareWebApi.Services.VideoUploadService;
 using VidShareWebApi.UnitOfWork;
 using VidShareWebApi.Utils.S3;
@@ -28,13 +30,13 @@ builder.Services.AddSingleton<IAmazonS3>(sp =>
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IVideoInfoRepo, VideoInfoRepo>();
 builder.Services.AddScoped<IVideoUploadService, VideoUploadService>();
+builder.Services.AddScoped<IVideoDownloadUrlsRepo, VideoDownloadUrlsRepo>();
+builder.Services.AddScoped<IVideoDownloadService, VideoDownloadService>();
 
 builder.Services.AddScoped<IS3Service, S3Service>();
 builder.Services.AddSingleton<IKafkaService, KafkaProducerService>();
 
 
-// Add your repository
-builder.Services.AddScoped<IVideoRepository, VideoRepository>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

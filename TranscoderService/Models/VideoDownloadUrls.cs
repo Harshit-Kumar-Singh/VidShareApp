@@ -1,8 +1,7 @@
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using Amazon.DynamoDBv2;
 
-namespace VidShareWebApi.Models
+
+namespace TranscoderService.Models
 {
     public class VideoDownloadUrls
     {
@@ -17,9 +16,8 @@ namespace VidShareWebApi.Models
         public string? DownloadUrl480 { get; set; }
         public string? DownloadUrl720 { get; set; }
         public string? DownloadUrl1080 { get; set; }
-
         public int VideoInfoId { get; set; }
-        public VideoInfo VideoInfo { get; set; }
+
 
    } 
 }

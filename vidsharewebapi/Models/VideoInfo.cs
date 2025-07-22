@@ -10,8 +10,7 @@ namespace VidShareWebApi.Models
         public int VideoInfoId { get; set; }
 
 
-        [Required]
-        public string KeyId { get; set; }
+        public string? KeyId { get; set; }
 
         [Required]
         public string Title { get; set; }
@@ -20,9 +19,9 @@ namespace VidShareWebApi.Models
 
         public int UserId { get; set; }
 
-        public User User { get; set; }
+        public User? User { get; set; }
 
-        ICollection<VideoDownloadUrls> VideoDownloadUrls { get; set; }
+        public ICollection<VideoDownloadUrls>?   VideoDownloadUrls { get; set; }
 
         
     }

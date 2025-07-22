@@ -3,7 +3,9 @@ using Amazon.DynamoDBv2;
 using Microsoft.AspNetCore.Mvc;
 using VidShareWebApi.Models;
 using VidShareWebApi.Repositories;
+using VidShareWebApi.Repositories.VideoDownloadUrlsRepo;
 using VidShareWebApi.Services.KafkaService;
+using VidShareWebApi.Services.VideoDownloadService;
 using VidShareWebApi.Services.VideoUploadService;
 using VidShareWebApi.Utils;
 using VidShareWebApi.Utils.S3;
@@ -15,9 +17,13 @@ namespace VidShareWebApi.Controllers
     public class VideoUploadController : ControllerBase
     {
         private readonly IVideoUploadService videoUploadService;
-        public VideoUploadController(IVideoUploadService _videoUploadService)
+        private readonly IVideoDownloadService videoDownloadService;
+        private readonly IKafkaService kafkaService;
+        public VideoUploadController(IVideoUploadService _videoUploadService, IKafkaService _kafkaService, IVideoDownloadService _videoDownloadService)
         {
             videoUploadService = _videoUploadService;
+            videoDownloadService = _videoDownloadService;
+
         }
 
         [HttpPut]
@@ -28,32 +34,15 @@ namespace VidShareWebApi.Controllers
             return await videoUploadService.SaveVideoInfo(info);
 
         }
-        /*
+
         [HttpPost]
         [Route("upload-video/{id}")]
-        public async Task<IActionResult> UploadVideo([FromRoute] string id,[FromForm] IFormFile mediaFile)
+        public async Task<ServiceResult<bool>> UploadVideo([FromRoute] string id, [FromForm] IFormFile mediaFile)
         {
-            var info = await _repository.GetByIdAsync(id);
-            var httpClient = new HttpClient();
-            var streamContent = new StreamContent(mediaFile.OpenReadStream());
-            streamContent.Headers.ContentType = new MediaTypeHeaderValue(mediaFile.ContentType);
-            var response = await httpClient.PutAsync(info.preSignedUrl, streamContent);
-
-            // connect to kafka and send the meta info in it for transcoder service
-            await _kafkaService.SendMessageAsync("test-topic", info.Id);
-
-            if (response.IsSuccessStatusCode)
-            {
-                return Ok(new
-                {
-                    Message = "Video Uploaded Successfully",
-                    DownloadUrl = info.downloadRawVideoUrl
-                });
-            }
-            return StatusCode((int)response.StatusCode, "Failed to upload on S3");
+            return await videoUploadService.VideoUpload(id, mediaFile);
         }
 
-        */
+        
 
     }
 }
