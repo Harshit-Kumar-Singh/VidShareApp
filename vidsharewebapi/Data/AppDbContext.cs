@@ -19,13 +19,23 @@ namespace VidShareWebApi.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
+            modelBuilder.Entity<User>().HasIndex(u => u.Email).IsUnique();
+            modelBuilder.Entity<User>().HasIndex(u => u.UserName).IsUnique();
             modelBuilder.Entity<User>().HasData(new User
             {
                 UserId = 1,
                 Email = "abc@gmail.com",
+                UserName = "harshit_k_singh",
                 Password = "xvasdfasf",
                 CreatedAt = DateTime.UtcNow,
+                PasswordSalt = "salt"
             });
+
+            
+
+          
+
         }
 
 

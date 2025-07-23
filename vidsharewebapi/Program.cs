@@ -1,27 +1,55 @@
-using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.DataModel;
+using System.Text;
 using Amazon.S3;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using VidShareWebApi.Data;
 using VidShareWebApi.Repositories;
+using VidShareWebApi.Repositories.Users;
 using VidShareWebApi.Repositories.VideoDownloadUrlsRepo;
 using VidShareWebApi.Repositories.VideoInfoRepo;
+using VidShareWebApi.Services.AuthService;
 using VidShareWebApi.Services.KafkaService;
 using VidShareWebApi.Services.VideoDownloadService;
 using VidShareWebApi.Services.VideoUploadService;
 using VidShareWebApi.UnitOfWork;
 using VidShareWebApi.Utils.S3;
 
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionstring = "Server=localhost;Port=3306;Database=vidshare;User=root;Password=root;";
 
+
+// Registering DB
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         connectionstring,
         new MySqlServerVersion(new Version(8, 0, 6)
     )));
+
+const string jwtKey = "myJwtKey";
+
+
+//Authentication ---- 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var key = Encoding.UTF8.GetBytes(jwtKey);
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey)
+            ),
+            ValidateIssuer = false,
+            ValidateAudience = false
+
+
+        };
+    });
 
 
 builder.Services.AddSingleton<IAmazonS3>(sp =>
@@ -35,6 +63,9 @@ builder.Services.AddScoped<IVideoDownloadService, VideoDownloadService>();
 
 builder.Services.AddScoped<IS3Service, S3Service>();
 builder.Services.AddSingleton<IKafkaService, KafkaProducerService>();
+
+builder.Services.AddScoped<IUserRepo, UserRepo>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 
 
