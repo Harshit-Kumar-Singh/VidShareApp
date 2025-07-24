@@ -2,4 +2,6 @@ vidsharewebapi/obj/
 vidsharewebapi/bin/
 TranscoderService/obj/
 TranscoderService/bin
+vishareui/nodemodules
+vidshareui/package-lock.json
 
