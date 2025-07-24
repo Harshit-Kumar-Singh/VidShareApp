@@ -19,8 +19,6 @@ namespace VidShareWebApi.Models
         [PasswordPropertyText]
         public string Password { get; set; }
 
-        [Required]
-        public string PasswordSalt { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

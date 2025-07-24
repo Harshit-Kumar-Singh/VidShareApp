@@ -125,12 +125,18 @@ public class Worker : BackgroundService
 
 
             //await RunFFmpegAsync(inputPath, output720p, "1280x720");
+
+
+            //Here will implement Task thing to to thing in parallelly
+
             await RunFFmpegAsync(inputPath, output480p, "854:480");
             System.Console.WriteLine("Converted into resoltution");
             // 3. Upload transcoded videos to S3
             string outputKey720p = $"transcoded/720p/{Path.GetFileName(output720p)}";
             string outputKey480p = $"transcoded/480p/{Path.GetFileName(output480p)}";
 
+
+            
             //await fileTransferUtility.UploadAsync(output720p, _bucketName, outputKey720p);
             await fileTransferUtility.UploadAsync(output480p, BucketName, outputKey480p);
 

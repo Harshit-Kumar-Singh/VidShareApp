@@ -29,7 +29,6 @@ namespace VidShareWebApi.Data
                 UserName = "harshit_k_singh",
                 Password = "xvasdfasf",
                 CreatedAt = DateTime.UtcNow,
-                PasswordSalt = "salt"
             });
 
             

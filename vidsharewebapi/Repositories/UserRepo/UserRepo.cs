@@ -22,10 +22,16 @@ namespace VidShareWebApi.Repositories.Users
             {
                 Console.WriteLine(ex.Message.ToString());
                 return false;
-               
+
             }
-            
+
             throw new NotImplementedException();
+        }
+
+
+        public User GetUser(string userName)
+        {
+           return context.Users.Where(u => u.UserName.Equals(userName)).FirstOrDefault();
         }
     }
 }
