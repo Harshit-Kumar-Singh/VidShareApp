@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using VidShareWebApi.Data;
+using VidShareWebApi.MiddleWares;
 using VidShareWebApi.Repositories;
 using VidShareWebApi.Repositories.Users;
 using VidShareWebApi.Repositories.VideoDownloadUrlsRepo;
@@ -98,7 +99,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+
+app.UseCors(option => option.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+
 app.UseHttpsRedirection();
+app.UseMiddleware<LoggerMiddleWare>();
+
+
 
 app.MapGet("/", () =>
 {

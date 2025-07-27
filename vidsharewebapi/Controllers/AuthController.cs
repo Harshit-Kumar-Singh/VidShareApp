@@ -23,7 +23,7 @@ namespace VidShareWebApi.Controllers
             return await authService.RegisterUser(registerDto);
         }
 
-        [HttpGet]
+        [HttpPost]
         [Route("login-user")]
         public ServiceResult<bool> LoginUser([FromBody] LoginDto loginDto)
         {
