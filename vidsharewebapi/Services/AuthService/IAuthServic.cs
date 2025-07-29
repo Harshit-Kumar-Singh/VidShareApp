@@ -6,6 +6,6 @@ namespace VidShareWebApi.Services.AuthService
     public interface IAuthService
     {
         Task<ServiceResult<bool>> RegisterUser(RegisterDto registerDto);
-        ServiceResult<bool> LoginUser(LoginDto loginDto);
+        ServiceResult<string> LoginUser(LoginDto loginDto);
     }
 }

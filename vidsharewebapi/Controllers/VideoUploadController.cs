@@ -1,6 +1,8 @@
 using System.Net.Http.Headers;
 using Amazon.DynamoDBv2;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using VidShareWebApi.DTOs;
 using VidShareWebApi.Models;
 using VidShareWebApi.Repositories;
 using VidShareWebApi.Repositories.VideoDownloadUrlsRepo;
@@ -13,6 +15,7 @@ using VidShareWebApi.Utils.S3;
 namespace VidShareWebApi.Controllers
 {
     [ApiController]
+    [Authorize]
     [Route("api")]
     public class VideoUploadController : ControllerBase
     {
@@ -28,7 +31,7 @@ namespace VidShareWebApi.Controllers
 
         [HttpPut]
         [Route("save-video-info")]
-        public async Task<ServiceResult<string>> SaveVideoInfo([FromBody] VideoInfo info)
+        public async Task<ServiceResult<VideoInfoDtos>> SaveVideoInfo([FromBody] VideoInfo info)
         {
 
             return await videoUploadService.SaveVideoInfo(info);
@@ -36,13 +39,34 @@ namespace VidShareWebApi.Controllers
         }
 
         [HttpPost]
-        [Route("upload-video/{id}")]
-        public async Task<ServiceResult<bool>> UploadVideo([FromRoute] string id, [FromForm] IFormFile mediaFile)
+        [Route("upload-video")]
+        public async Task<ServiceResult<VideoInfoDtos>> UploadVideo([FromForm] IFormFile mediaFile, [FromForm] string uploadId, [FromForm] string title)
         {
-            return await videoUploadService.VideoUpload(id, mediaFile);
+            int userId = 0;
+            try
+            {
+                Int32.TryParse(User.FindFirst("UserId").Value.ToString(), out userId);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return new ServiceResult<VideoInfoDtos>
+                {
+                    Message = "Error",
+                    Success = false
+                };
+            }
+
+
+            return await videoUploadService.VideoUpload(userId, mediaFile, uploadId, title);
         }
 
-        
 
+        [HttpGet]
+        [Route("get-download-urls/{keyId}")]
+        public async Task<ServiceResult<VideoInfoDtos>> GetDownloadUrls([FromRoute]string keyId)
+        {
+            return await videoUploadService.GetDownloadUrls(keyId);
+        }
     }
 }

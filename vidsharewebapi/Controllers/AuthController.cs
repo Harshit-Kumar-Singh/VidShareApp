@@ -25,7 +25,7 @@ namespace VidShareWebApi.Controllers
 
         [HttpPost]
         [Route("login-user")]
-        public ServiceResult<bool> LoginUser([FromBody] LoginDto loginDto)
+        public ServiceResult<string> LoginUser([FromBody] LoginDto loginDto)
         {
             return authService.LoginUser(loginDto);
         }

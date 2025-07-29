@@ -16,6 +16,7 @@ using VidShareWebApi.Services.VideoDownloadService;
 using VidShareWebApi.Services.VideoUploadService;
 using VidShareWebApi.UnitOfWork;
 using VidShareWebApi.Utils.S3;
+using VidShareWebApi.Utils.SignalR;
 
 
 
@@ -76,6 +77,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 
@@ -99,14 +103,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
-app.UseCors(option => option.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+app.UseCors(option => option.WithOrigins("http://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials());
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.UseMiddleware<LoggerMiddleWare>();
 
 
 
+app.MapHub<UploadHub>("/uploadHub");
 app.MapGet("/", () =>
 {
     return "VidShareBackend running";

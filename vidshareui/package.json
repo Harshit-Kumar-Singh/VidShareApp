@@ -26,17 +26,16 @@
     "@angular/forms": "^20.1.0",
     "@angular/platform-browser": "^20.1.0",
     "@angular/router": "^20.1.0",
+    "@microsoft/signalr": "^8.0.7",
     "@primeuix/themes": "^1.2.1",
+    "@tailwindcss/postcss": "^4.1.11",
+    "primeicons": "^7.0.0",
     "primeng": "^20.0.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.15.0",
-
-     "primeicons": "^7.0.0",
-
-    "@tailwindcss/postcss": "^4.1.11",
+    "tailwindcss": "^4.1.11",
     "tailwindcss-primeui": "^0.6.1",
-    "tailwindcss": "^4.1.11"
+    "tslib": "^2.3.0",
+    "zone.js": "~0.15.0"
   },
   "devDependencies": {
     "@angular/build": "^20.1.2",

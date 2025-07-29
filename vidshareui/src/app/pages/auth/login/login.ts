@@ -34,6 +34,7 @@ export class Login {
       this.authService.login({userName : this.userName,password : this.password}).subscribe({
         next:(v)=>{
           if(v && v.success && v.result){
+            this.authService.storeToken(v.result)
             this.router.navigate(['/upload']);
           }
         },

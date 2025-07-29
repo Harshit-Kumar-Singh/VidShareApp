@@ -1,62 +1,62 @@
 <div style="display: flex; justify-content: center; height: 30rem;">
     <div class="card" style="width: 75%;">
     <p-toast />
-    <p-fileupload name="myfile[]" url="https://www.primefaces.org/cdn/api/upload.php" [multiple]="true" accept="image/*,video/*" maxFileSize="1000000" (onUpload)="onTemplatedUpload()" (onSelect)="onSelectedFiles($event)">
+    <p-fileupload name="myfile[]" url="https://www.primefaces.org/cdn/api/upload.php" [multiple]="false" accept="image/*,video/*" maxFileSize="1000000" (onUpload)="onTemplatedUpload()" (onSelect)="onSelectedFiles($event)">
         <ng-template #header let-files let-chooseCallback="chooseCallback" let-clearCallback="clearCallback" let-uploadCallback="uploadCallback">
             <div class="flex flex-wrap justify-between items-center flex-1 gap-4">
                <div class="flex justify-between items-center w-full">
   <!-- Left group: First 3 buttons -->
   <div class="flex gap-2">
     <p-button (onClick)="choose($event, chooseCallback)" icon="pi pi-images" [rounded]="true" [outlined]="true" />
-    <p-button (onClick)="uploadEvent(uploadCallback)" icon="pi pi-cloud-upload" [rounded]="true" [outlined]="true" severity="success" [disabled]="!files || files.length === 0" />
-    <p-button (onClick)="clearCallback()" icon="pi pi-times" [rounded]="true" [outlined]="true" severity="danger" [disabled]="!files || files.length === 0" />
+    <!-- <p-button (onClick)="uploadEvent(uploadCallback)" icon="pi pi-cloud-upload" [rounded]="true" [outlined]="true" severity="success" [disabled]="!files || files.length === 0" /> -->
+    <p-button (onClick)="removeFiles(clearCallback)" icon="pi pi-times" [rounded]="true" [outlined]="true" severity="danger" [disabled]="!files || files.length === 0" />
   </div>
 
   <!-- Right-aligned button -->
   <p-iconfield>
         <p-inputicon class="pi pi-lock" />
-            <input pInputText  placeholder="Title of your video" />
+            <input pInputText [(ngModel)]="title" placeholder="Title of your video" />
     </p-iconfield>        
 </div>
-                <p-progressbar [value]="totalSizePercent" [showValue]="false" class="w-full" class="md:w-20rem h-1 w-full md:ml-auto">
+                <p-progressbar [value]="uploadProgress" [showValue]="false" class="w-full" class="md:w-20rem h-1 w-full md:ml-auto">
                     <span class="whitespace-nowrap">{{ totalSize }}B / 1Mb</span>
                 </p-progressbar>
             </div>
         </ng-template>
-        <ng-template #content let-files let-uploadedFiles="uploadedFiles" let-removeFileCallback="removeFileCallback" let-removeUploadedFileCallback="removeUploadedFileCallback">
-            <div class="flex flex-col gap-8 pt-4">
-                <div *ngIf="files?.length > 0">
+        <ng-template #content >
+            <div class="flex flex-col gap-4 items-center pt-4">
+                <div *ngIf="files && files.length > 0">
                     <h5>Pending</h5>
                     <div class="flex flex-wrap gap-4">
                         <div *ngFor="let file of files; let i = index" class="p-8 rounded-border flex flex-col border border-surface items-center gap-4">
-                            <div>
+                            <!-- <div>
                                 <img role="presentation" [alt]="file.name" [src]="file.objectURL" width="100" height="50" />
-                            </div>
+                            </div> -->
                             <span class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden">{{ file.name }}</span>
                             <div>{{ formatSize(file.size) }}</div>
                             <p-badge value="Pending" severity="warn" />
-                            <p-button icon="pi pi-times" (click)="onRemoveTemplatingFile($event, file, removeFileCallback, i)" [outlined]="true" [rounded]="true" severity="danger" />
+                            <!-- <p-button icon="pi pi-times"  [outlined]="true" [rounded]="true" severity="danger" /> -->
                         </div>
                     </div>
                 </div>
-                <div *ngIf="uploadedFiles?.length > 0">
+                <div *ngIf="uploadedFiles.length > 0">
                     <h5>Completed</h5>
                     <div class="flex flex-wrap gap-4">
                         <div *ngFor="let file of uploadedFiles; let i = index" class="card m-0 px-12 flex flex-col border border-surface items-center gap-4">
-                            <div>
+                            <!-- <div>
                                 <img role="presentation" [alt]="file.name" [src]="file.objectURL" width="100" height="50" />
-                            </div>
+                            </div> -->
                             <span class="font-semibold text-ellipsis max-w-60 whitespace-nowrap overflow-hidden">{{ file.name }}</span>
                             <div>{{ formatSize(file.size) }}</div>
-                            <p-badge value="Completed" class="mt-4" severity="success" />
-                            <p-button icon="pi pi-times" (onClick)="removeUploadedFileCallback(i)" [outlined]="true" [rounded]="true" severity="danger" />
+                            <p-badge value="Completed" severity="success" />
+                            <!-- <p-button icon="pi pi-times"  [outlined]="true" [rounded]="true" severity="danger" /> -->
                         </div>
                     </div>
                 </div>
             </div>
         </ng-template>
         <ng-template #file></ng-template>
-        <ng-template #empty>
+        <ng-template #empty style="cursor: pointer;" >
             <div class="flex items-center justify-center flex-col">
                 <i class="pi pi-cloud-upload !border-2 !rounded-full !p-8 !text-4xl !text-muted-color"></i>
                 <p class="mt-6 mb-0">Drag and drop files to here to upload.</p>
@@ -64,7 +64,17 @@
         </ng-template>
     </p-fileupload>
     <div class="flex items-center justify-center pt-4" >
-           
+           <div class="flex items-center space-x-2">
+            
+            <button *ngIf="getrawUrl"
+                pButton
+                type="button"
+                icon="pi pi-copy"
+                label="Copy Download Link"
+                class="p-button-sm p-button-outlined"
+                (click)="copyToClipboard(getrawUrl)"
+            ></button>
+</div>
     </div>
 
 </div>

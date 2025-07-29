@@ -25,18 +25,17 @@ namespace VidShareWebApi.Services.AuthService
             
             
         }
-        public ServiceResult<bool> LoginUser(LoginDto loginDto)
+        public ServiceResult<string> LoginUser(LoginDto loginDto)
         {
 
             User user = unitOfWork.User.GetUser(loginDto.UserName);
             Console.WriteLine(user.Password +  " - "   + loginDto.Password);
             if (user == null)
             {
-                return new ServiceResult<bool>
+                return new ServiceResult<string>
                 {
                     Message = "Either UserName or Password is Wrong",
                     Success = false,
-                    Result = false
                 };
             }
             var userTemp = new User() { Email = user.Email };
@@ -46,11 +45,10 @@ namespace VidShareWebApi.Services.AuthService
 
             if (!result)
             {
-                return new ServiceResult<bool>
+                return new ServiceResult<string>
                 {
                     Message = "Either UserName or Password is Wrong",
                     Success = false,
-                    Result = false
                 };
             }
 
@@ -58,11 +56,11 @@ namespace VidShareWebApi.Services.AuthService
             var token = GenerateJSONWebToken(user);
             Console.WriteLine(token);
 
-            return new ServiceResult<bool>
+            return new ServiceResult<string>
             {
                 Success = true,
                 Message = "Login success",
-                Result = true
+                Result = token
             };
         }
 
@@ -71,6 +69,7 @@ namespace VidShareWebApi.Services.AuthService
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("myJwtKeymyJwtKeymyJwtKeymyJwtKey"));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             Claim[] claims = new[] {
+                new Claim("UserId",user.UserId.ToString()),
                 new Claim(JwtRegisteredClaimNames.Email,user.Email),
                 new Claim(JwtRegisteredClaimNames.Name,user.UserName),
             };

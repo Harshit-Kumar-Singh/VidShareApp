@@ -5,67 +5,171 @@ import { FileUpload } from 'primeng/fileupload';
 import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { BadgeModule } from 'primeng/badge';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { ProgressBar } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
 
 import { InputIcon } from 'primeng/inputicon';
 import { IconField } from 'primeng/iconfield';
 import { InputTextModule } from 'primeng/inputtext';
-import { FormsModule } from '@angular/forms';
-
+import { FormControl, FormGroup, FormsModule } from '@angular/forms';
+import * as signalR from '@microsoft/signalr';
+import { AuthService } from '../../../services/auth.service';
+import { RippleModule } from 'primeng/ripple';
 
 @Component({
   selector: 'app-drag-video',
-  imports: [FileUpload, ButtonModule, BadgeModule, ProgressBar, ToastModule, HttpClientModule, CommonModule,InputIcon, IconField, InputTextModule, FormsModule],
+  imports: [FileUpload, ButtonModule, BadgeModule, ProgressBar, ToastModule, HttpClientModule, CommonModule,InputIcon, IconField, InputTextModule, FormsModule,RippleModule],
   templateUrl: './drag-video.html',
   styleUrl: './drag-video.scss',
   providers:[MessageService]
 })
 export class DragVideo {
+  files :File[] = [];
+  uploadedFiles  : File[]= [];
+
+  
+  uploadProgress = 0;
+  connection!: signalR.HubConnection;
+  uploadId = crypto.randomUUID(); // generate unique ID per upload
 
 
-  files = [];
+  ngOnInit() {
+    this.connection = new signalR.HubConnectionBuilder()
+      .withUrl('http://localhost:5086/uploadHub',{
+        accessTokenFactory: () => localStorage.getItem('authToken') || '', // 👈 or your authService.getToken()
+        withCredentials: false // 👈 only true if you're using cookies; false if using Bearer token
+      })
+      .build();
+
+    this.connection.on('ReceiveProgress', (percent: number) => {
+      this.uploadProgress = percent;
+      console.log(this.uploadProgress);
+    });
+
+    this.connection.start().then(() => {
+      this.connection.invoke('JoinGroup', this.uploadId);
+    });
+  }
+
+
+
 
     totalSize : number = 0;
 
-    totalSizePercent : number = 0;
 
 
-    constructor(private config: PrimeNG, private messageService: MessageService) {}
+
+    constructor(private config: PrimeNG, private messageService: MessageService,private http:HttpClient,private authService:AuthService) {}
 
     choose(event : any, callback : any) {
+      console.log(event,callback);
         callback();
     }
 
     onRemoveTemplatingFile(event : any, file : any, removeFileCallback : any, index : any) {
-        removeFileCallback(event, index);
-        this.totalSize -= parseInt(this.formatSize(file.size));
-        this.totalSizePercent = this.totalSize / 10;
+        
+      this.uploadProgress = 0;
+//this.files = [];
+
+        console.log(event);
+    }
+
+    title = '';
+    removeFiles(callback:any){
+      this.files = [];
+      this.uploadedFiles = [];
+      this.uploadProgress = 0;
+      this.title = ''
+      this.downloadUrls.reset();
+      callback();
     }
 
     onClearTemplatingUpload(clear : any) {
-        clear();
+       // clear();
         this.totalSize = 0;
-        this.totalSizePercent = 0;
+        this.uploadProgress = 0;
     }
 
     onTemplatedUpload() {
-        console.log('Template upload triggered')
-        this.messageService.add({ severity: 'info', summary: 'Success', detail: 'File Uploaded', life: 3000 });
+        
     }
 
+    downloadUrls = new FormGroup({
+      _rawVideoUrl : new FormControl(''),
+      _480VideoUrl : new FormControl(''),
+      _720VideoUrl : new FormControl(''),
+      _1O80VideoUrl : new FormControl('')
+    });
+  
     onSelectedFiles(event : any) {
-        console.log(this.files,event);
-        this.files = event.currentFiles;
-        this.files.forEach((file : File) => {
-           this.totalSize += parseInt(this.formatSize(file.size));
+        console.log(event);
+        this.files = [];
+          this.uploadedFiles = [];
+          this.uploadProgress = 0;
+          
+        const file = event.currentFiles[0];
+        this.files.push(file);
+        const formData = new FormData();
+        formData.append('mediaFile', file);
+        formData.append('uploadId', this.uploadId); // pass to backend
+        formData.append('title',this.title);
+        
+        this.http.post('http://localhost:5086/api/upload-video', formData).subscribe({
+        next: (res : any) => {
+          this.files = [];
+          this.uploadedFiles.push(file);
+          console.log('Uploaded!');
+          if(res.success){
+            this.downloadUrls.get('_rawVideoUrl')?.setValue(res.result.downloadUrlRaw);
+            console.log(this.downloadUrls.get('_rawVideoUrl')?.value)
+            this.keyid = res.result.keyId;
+            this.updateDownloadUrls()
+          }
+          
+        },
+        error: (err) => console.error(err)
         });
-        this.totalSizePercent = this.totalSize / 10;
+    }
+
+    get getrawUrl(){
+      return this.downloadUrls.get('_rawVideoUrl')?.value;
     }
 
     uploadEvent(callback : any) {
+      console.log(callback);
         callback();
+    }
+
+    copyToClipboard(text: string) {
+      navigator.clipboard.writeText(text).then(() => {
+        // Optional: Show a toast or message
+        this.messageService.add({ severity: 'success', summary: 'Copied', detail: 'Download Link Copied'});
+        console.log('Copied:', text);
+      });
+
+    }
+    keyid : string = '';
+    timeOut:any;
+    updateDownloadUrls(){
+      let flag =  false;
+      this.timeOut = setInterval(()=>{
+        console.log('is Download Url recieve?')
+          this.http.get(`http://localhost:5086/api/get-download-urls/${this.keyid}`).subscribe({
+            next:(res:any)=>{
+              if(res.success){
+                flag = true;
+              }
+            },
+            error:(er)=>{
+
+            }
+          })
+          if(flag){
+            clearInterval(this.timeOut)
+          }
+        
+      },5000)
     }
 
     formatSize(bytes : any) {
