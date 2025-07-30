@@ -16,17 +16,21 @@ import { FormControl, FormGroup, FormsModule } from '@angular/forms';
 import * as signalR from '@microsoft/signalr';
 import { AuthService } from '../../../services/auth.service';
 import { RippleModule } from 'primeng/ripple';
+import { VideoUploadService } from '../../../services/videoupload.service';
+import { DialogModule } from 'primeng/dialog';
+
 
 @Component({
   selector: 'app-drag-video',
-  imports: [FileUpload, ButtonModule, BadgeModule, ProgressBar, ToastModule, HttpClientModule, CommonModule,InputIcon, IconField, InputTextModule, FormsModule,RippleModule],
+  imports: [FileUpload, ButtonModule, BadgeModule, DialogModule,ProgressBar, ToastModule, HttpClientModule, CommonModule,InputIcon, IconField, InputTextModule, FormsModule,RippleModule],
   templateUrl: './drag-video.html',
   styleUrl: './drag-video.scss',
-  providers:[MessageService]
+  providers:[MessageService,AuthService,VideoUploadService]
 })
 export class DragVideo {
   files :File[] = [];
   uploadedFiles  : File[]= [];
+  showWarning: boolean = false;
 
   
   uploadProgress = 0;
@@ -60,7 +64,12 @@ export class DragVideo {
 
 
 
-    constructor(private config: PrimeNG, private messageService: MessageService,private http:HttpClient,private authService:AuthService) {}
+    constructor(private config: PrimeNG, 
+      private messageService: MessageService,
+      private http:HttpClient,
+      private authService:AuthService,
+      private videoUploadService : VideoUploadService
+      ) {}
 
     choose(event : any, callback : any) {
       console.log(event,callback);
@@ -82,6 +91,7 @@ export class DragVideo {
       this.uploadProgress = 0;
       this.title = ''
       this.downloadUrls.reset();
+      this.showWarning = false;
       callback();
     }
 
@@ -110,15 +120,22 @@ export class DragVideo {
           
         const file = event.currentFiles[0];
         this.files.push(file);
-        const formData = new FormData();
-        formData.append('mediaFile', file);
+    }
+    uploadEvent(){
+      if(!this.title){
+        this.showWarning = true;
+        return;
+      }
+       const formData = new FormData();
+        formData.append('mediaFile', this.files[0]);
         formData.append('uploadId', this.uploadId); // pass to backend
         formData.append('title',this.title);
         
-        this.http.post('http://localhost:5086/api/upload-video', formData).subscribe({
+        this.videoUploadService.uploadVideo(formData).subscribe({
         next: (res : any) => {
+          
+          this.uploadedFiles.push(this.files[0]);
           this.files = [];
-          this.uploadedFiles.push(file);
           console.log('Uploaded!');
           if(res.success){
             this.downloadUrls.get('_rawVideoUrl')?.setValue(res.result.downloadUrlRaw);
@@ -136,10 +153,14 @@ export class DragVideo {
       return this.downloadUrls.get('_rawVideoUrl')?.value;
     }
 
-    uploadEvent(callback : any) {
-      console.log(callback);
-        callback();
+    get get480pUrl(){
+      return this.downloadUrls.get('_480VideoUrl')?.value;
     }
+
+    // uploadEvent(callback : any) {
+    //   console.log(callback);
+    //     callback();
+    // }
 
     copyToClipboard(text: string) {
       navigator.clipboard.writeText(text).then(() => {
@@ -154,11 +175,11 @@ export class DragVideo {
     updateDownloadUrls(){
       let flag =  false;
       this.timeOut = setInterval(()=>{
-        console.log('is Download Url recieve?')
-          this.http.get(`http://localhost:5086/api/get-download-urls/${this.keyid}`).subscribe({
+          this.videoUploadService.getDownloadUrls(this.keyid).subscribe({
             next:(res:any)=>{
               if(res.success){
                 flag = true;
+                this.downloadUrls.get('_480VideoUrl')?.setValue(res.result.downloadUrl480);
               }
             },
             error:(er)=>{
