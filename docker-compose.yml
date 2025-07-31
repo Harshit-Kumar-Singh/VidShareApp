@@ -1,0 +1,38 @@
+
+
+networks:
+  shared-network:
+    driver: bridge
+
+services:
+  anguler-ui:
+    build: 
+      context: ./vidshareui
+      dockerfile: Dockerfile
+    ports:
+      - "4300:80"
+    networks:
+      - shared-network
+    depends_on:
+      - web-api
+  
+  web-api:
+    build: 
+      context: ./vidsharewebapi
+      dockerfile: Dockerfile
+    container_name: web-api
+    ports:
+      - "8080:80"
+    networks:
+      - shared-network
+  
+  worker:
+    build: 
+      context: ./TranscoderService
+      dockerfile: Dockerfile
+    networks:
+      - shared-network
+    depends_on:
+      - web-api
+
+  
