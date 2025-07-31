@@ -18,11 +18,18 @@ using VidShareWebApi.UnitOfWork;
 using VidShareWebApi.Utils.S3;
 using VidShareWebApi.Utils.SignalR;
 
+using Serilog;
+using Serilog.Sinks.Elasticsearch;
+using System.Threading.Tasks;
+
 
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionstring = "Server=localhost;Port=3306;Database=vidshare;User=root;Password=root;";
+var config = builder.Configuration;
+var connectionstring = config.GetConnectionString("DefaultConnection");
+string jwtKey = config["JwtSettings:SecretKey"];
+
 
 
 // Registering DB
@@ -32,7 +39,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
         new MySqlServerVersion(new Version(8, 0, 6)
     )));
 
-const string jwtKey = "myJwtKeymyJwtKeymyJwtKeymyJwtKey";
+
 
 
 //Authentication ---- 
@@ -56,6 +63,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddSingleton<IAmazonS3>(sp =>
     new AmazonS3Client(Amazon.RegionEndpoint.USEast1)); // adjust region if needed
+
+
+Log.Logger = new LoggerConfiguration()
+    .Enrich.FromLogContext()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithThreadId()
+    .WriteTo.Console()
+    .WriteTo.Elasticsearch(new ElasticsearchSinkOptions(new Uri("http://localhost:9200"))
+    {
+        AutoRegisterTemplate = true,
+        IndexFormat = $"webapi-logs-{DateTime.UtcNow:yyyy.MM}"
+    })
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IVideoInfoRepo, VideoInfoRepo>();
@@ -109,12 +131,16 @@ app.UseAuthorization();
 
 app.UseHttpsRedirection();
 app.UseMiddleware<LoggerMiddleWare>();
+app.UseMiddleware<ExceptionMiddleware>();
 
 
 
 app.MapHub<UploadHub>("/uploadHub");
 app.MapGet("/", () =>
 {
+    Parallel.For(0,10,i=>{
+                Console.WriteLine($"Processing {i} on Thread {Thread.CurrentThread.ManagedThreadId}");
+            });
     return "VidShareBackend running";
 });
 app.MapControllers();

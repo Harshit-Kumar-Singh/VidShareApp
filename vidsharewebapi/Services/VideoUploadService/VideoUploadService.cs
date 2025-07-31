@@ -24,12 +24,15 @@ namespace VidShareWebApi.Services.VideoUploadService
 
         private readonly IHubContext<UploadHub> _hubContext;
 
-        public VideoUploadService(IS3Service s3Service, IUnitOfWork _unitOfWork, IKafkaService _ks, IHubContext<UploadHub> hubContext)
+        IConfiguration configuration;
+
+        public VideoUploadService(IS3Service s3Service, IUnitOfWork _unitOfWork, IKafkaService _ks, IHubContext<UploadHub> hubContext, IConfiguration _configuration)
         {
             _s3Service = s3Service;
             unitOfWork = _unitOfWork;
             kafkaService = _ks;
             _hubContext = hubContext;
+            configuration = _configuration;
         }
 
         public async Task<ServiceResult<VideoInfoDtos>> GetDownloadUrls(string keyId)
@@ -64,7 +67,7 @@ namespace VidShareWebApi.Services.VideoUploadService
                 info.KeyId = Guid.NewGuid().ToString();
 
 
-                const string bucketName = "vidshare-video-upload-bucket";
+                 string bucketName = configuration["S3:BucketName"];
                 // Generate pre-signed URL
                 string preSignedUrl = _s3Service.GetPreSignedUploadUrl(
                     bucketName: bucketName,
@@ -183,26 +186,20 @@ namespace VidShareWebApi.Services.VideoUploadService
 
 
 
-
+                Console.WriteLine(response.IsSuccessStatusCode);
                 // connect to kafka and send the meta info in it for transcoder servi ce
-                const string KAFKA_TOPIC = "test-topic";
+                 string KAFKA_TOPIC = configuration["Kafka:Topic"];
                 await kafkaService.SendMessageAsync(KAFKA_TOPIC, info.KeyId);
 
-                if (response.IsSuccessStatusCode)
-                {
-                    return new ServiceResult<VideoInfoDtos>
+            
+                 return new ServiceResult<VideoInfoDtos>
                     {
                         Result = info,
                         Success = true,
                         Message = "Video Uploaded Successfully!"
                     };
-                }
-                return new ServiceResult<VideoInfoDtos>
-                {
-                   
-                    Success = false,
-                    Message = "Video Uploading failed!"
-                };
+                
+               
             }
             catch (Exception ex)
             {

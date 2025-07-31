@@ -3,9 +3,6 @@ using System.Text.Json;
 using Amazon.S3;
 using Amazon.S3.Transfer;
 using Confluent.Kafka;
-using Amazon.S3.Transfer;
-using System;
-using TranscoderService.Models;
 using Amazon.S3.Model;
 using TranscoderService.AppDbContextX;
 namespace TranscoderService;
@@ -16,29 +13,30 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IAmazonS3 _s3Client;
     private readonly IConsumer<string, string> _consumer;
-    private const string BucketName = "vidshare-video-upload-bucket";
+    private  string BucketName = "";
 
+    private readonly IConfiguration configuration;
     private readonly string _tempFolder = Path.Combine(Path.GetTempPath(), "transcoder");
 
     private readonly IServiceScopeFactory _scopeFactory;
-    public Worker(ILogger<Worker> logger,IServiceScopeFactory scopeFactory)
+    public Worker(ILogger<Worker> logger,IServiceScopeFactory scopeFactory,IConfiguration _configuration)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
         _s3Client = new AmazonS3Client(Amazon.RegionEndpoint.USEast1);
+        configuration = configuration;
+        BucketName = configuration["S3:BucketName"];
         Directory.CreateDirectory(_tempFolder);
-
-
 
         var config = new ConsumerConfig
         {
-            BootstrapServers = "localhost:9092", // adjust for EC2 or Docker
-            GroupId = "transcoder-group",
+            BootstrapServers = configuration["Kafka:BootstrapServers"],
+            GroupId = configuration["Kafka:transcoder-group"],
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
 
         _consumer = new ConsumerBuilder<string, string>(config).Build();
-        _consumer.Subscribe("test-topic");
+        _consumer.Subscribe(configuration["Kafka:Topic"]);
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

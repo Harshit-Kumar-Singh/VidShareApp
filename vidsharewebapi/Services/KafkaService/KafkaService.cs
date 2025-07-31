@@ -5,7 +5,13 @@ namespace VidShareWebApi.Services.KafkaService
 {
     public class KafkaProducerService : IKafkaService
     {
-        private readonly string bootstrapServer = "localhost:9092";
+        private readonly string bootstrapServer;
+        IConfiguration config;
+        public KafkaProducerService(IConfiguration configuration)
+        {
+            config = configuration;
+            bootstrapServer = config["Kafka:BootstrapServers"];
+        }
         public async Task SendMessageAsync(string topic, string message)
         {
 

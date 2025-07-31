@@ -19,11 +19,13 @@ namespace VidShareWebApi.Services.AuthService
 
         private readonly PasswordHasher<User> passwordHasher = new  PasswordHasher<User>();
         private readonly IUnitOfWork unitOfWork;
-        public AuthService(IUnitOfWork _unitOfWork)
+        IConfiguration configuration;
+        public AuthService(IUnitOfWork _unitOfWork, IConfiguration _config)
         {
             unitOfWork = _unitOfWork;
-            
-            
+            configuration = _config;
+
+
         }
         public ServiceResult<string> LoginUser(LoginDto loginDto)
         {
@@ -66,6 +68,7 @@ namespace VidShareWebApi.Services.AuthService
 
         private string GenerateJSONWebToken(User user)
         {
+            string jwtKey = configuration["JwtSettings:SecretKey"];
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("myJwtKeymyJwtKeymyJwtKeymyJwtKey"));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             Claim[] claims = new[] {
