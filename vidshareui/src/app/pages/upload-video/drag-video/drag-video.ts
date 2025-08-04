@@ -18,7 +18,7 @@ import { AuthService } from '../../../services/auth.service';
 import { RippleModule } from 'primeng/ripple';
 import { VideoUploadService } from '../../../services/videoupload.service';
 import { DialogModule } from 'primeng/dialog';
-
+import  {environment as env} from '../../../../environments/environment';
 
 @Component({
   selector: 'app-drag-video',
@@ -40,7 +40,7 @@ export class DragVideo {
 
   ngOnInit() {
     this.connection = new signalR.HubConnectionBuilder()
-      .withUrl('http://localhost:5086/uploadHub',{
+      .withUrl(`${env.webApiHost}/uploadHub`,{
         accessTokenFactory: () => localStorage.getItem('authToken') || '', // 👈 or your authService.getToken()
         withCredentials: false // 👈 only true if you're using cookies; false if using Bearer token
       })

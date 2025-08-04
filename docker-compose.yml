@@ -25,6 +25,7 @@ services:
       - "8080:80"
     networks:
       - shared-network
+    
   
   worker:
     build: 
@@ -35,4 +36,4 @@ services:
     depends_on:
       - web-api
 
-  
+

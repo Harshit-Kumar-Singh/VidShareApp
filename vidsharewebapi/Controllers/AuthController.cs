@@ -27,6 +27,7 @@ namespace VidShareWebApi.Controllers
         [Route("login-user")]
         public ServiceResult<string> LoginUser([FromBody] LoginDto loginDto)
         {
+            Console.WriteLine("hit");
             return authService.LoginUser(loginDto);
         }
     }

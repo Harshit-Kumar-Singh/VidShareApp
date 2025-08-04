@@ -23,7 +23,7 @@ public class ExceptionMiddleware
 
             context.Response.StatusCode = 500;
             context.Response.ContentType = "application/json";
-
+            
             await context.Response.WriteAsync(JsonSerializer.Serialize(new
             {
                 Status = 500,

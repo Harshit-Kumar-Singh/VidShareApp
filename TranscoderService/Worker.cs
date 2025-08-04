@@ -5,6 +5,7 @@ using Amazon.S3.Transfer;
 using Confluent.Kafka;
 using Amazon.S3.Model;
 using TranscoderService.AppDbContextX;
+using System;
 namespace TranscoderService;
 
 
@@ -21,20 +22,21 @@ public class Worker : BackgroundService
     private readonly IServiceScopeFactory _scopeFactory;
     public Worker(ILogger<Worker> logger,IServiceScopeFactory scopeFactory,IConfiguration _configuration)
     {
+        Console.WriteLine("Init worker");
         _scopeFactory = scopeFactory;
         _logger = logger;
         _s3Client = new AmazonS3Client(Amazon.RegionEndpoint.USEast1);
-        configuration = configuration;
+        configuration = _configuration;
         BucketName = configuration["S3:BucketName"];
         Directory.CreateDirectory(_tempFolder);
 
         var config = new ConsumerConfig
         {
             BootstrapServers = configuration["Kafka:BootstrapServers"],
-            GroupId = configuration["Kafka:transcoder-group"],
+            GroupId = configuration["Kafka:GroupId"],
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
-
+        Console.WriteLine(configuration["Kafka:BootstrapServers"]);
         _consumer = new ConsumerBuilder<string, string>(config).Build();
         _consumer.Subscribe(configuration["Kafka:Topic"]);
     }
@@ -73,7 +75,7 @@ public class Worker : BackgroundService
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "/opt/homebrew/bin/ffmpeg",
+                    FileName = configuration["FFMPEG:Path"],
                     Arguments = arguments,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
@@ -162,9 +164,9 @@ public class Worker : BackgroundService
 
 
         }
-        catch (System.Exception)
+        catch (System.Exception ex)
         {
-            System.Console.WriteLine("Error");
+            System.Console.WriteLine(ex);
         }
 
     }

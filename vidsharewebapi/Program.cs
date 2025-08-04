@@ -26,8 +26,16 @@ using System.Threading.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+
 var config = builder.Configuration;
 var connectionstring = config.GetConnectionString("DefaultConnection");
+Console.WriteLine(connectionstring);
 string jwtKey = config["JwtSettings:SecretKey"];
 
 
@@ -135,12 +143,10 @@ app.UseMiddleware<ExceptionMiddleware>();
 
 
 
-app.MapHub<UploadHub>("/uploadHub");
+app.MapHub<UploadHub>("/api/uploadHub");
 app.MapGet("/", () =>
 {
-    Parallel.For(0,10,i=>{
-                Console.WriteLine($"Processing {i} on Thread {Thread.CurrentThread.ManagedThreadId}");
-            });
+
     return "VidShareBackend running";
 });
 app.MapControllers();
